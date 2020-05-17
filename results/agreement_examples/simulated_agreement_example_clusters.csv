@@ -1,0 +1,3 @@
+,Pearson Agglomerative,Spearman Agglomerative,Kendall's Tau Agglomerative,CCC Agglomerative,MSE Agglomerative,Cohen's Kappa Norm Diff Agglomerative,Cohen's Kappa Abs Norm Diff Agglomerative,Norm Sum Delta Agglomerative,Abs Norm Sum Delta Agglomerative,Pearson Spectral,Spearman Spectral,Kendall's Tau Spectral,CCC Spectral,MSE Spectral,Cohen's Kappa Norm Diff Spectral,Cohen's Kappa Abs Norm Diff Spectral,Norm Sum Delta Spectral,Abs Norm Sum Delta Spectral
+Sim1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0
+Sim2,1,1,1,1,1,0,0,0,0,1,0,0,1,1,0,0,1,1
