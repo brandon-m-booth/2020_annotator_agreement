@@ -169,9 +169,9 @@ def ICC(df):
    icc_df = pd.read_csv(results_path, index_col=0, header=0)
    return icc_df
 
-def NormedSumDelta(df):
+def SDA(norm_diff_df):
    norm_delta = lambda x,y: np.sum((x-y) == 0)/float(len(x))
-   return df.corr(method=norm_delta)
+   return norm_diff_df.corr(method=norm_delta)
 
 # prob_value: The probability of getting any individual value in the df. Each observed value
 #             is assumed to be iid.
