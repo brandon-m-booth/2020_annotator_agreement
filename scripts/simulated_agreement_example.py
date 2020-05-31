@@ -61,7 +61,7 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
    sim_anno2 = np.array(40*[0.1]+[0.5,0.5,-.5,-.5,-.5,-.5,-.5])+0.5
    sim_anno_df = pd.DataFrame(data=np.vstack((sim_anno, sim_anno2)).T, columns=['Sim1', 'Sim2'])
 
-   taska_anno_path = os.path.join(green_data_root, 'TaskA', 'annotations_1hz')
+   taska_anno_path = os.path.join(green_data_root, 'TaskA', 'annotations_1hz_shift_aligned')
    taska_anno_files = glob.glob(os.path.join(taska_anno_path, '*.csv'))
    green_taska_anno_df = None
    for taska_anno_file in taska_anno_files:
@@ -72,9 +72,10 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
          green_taska_anno_df = anno_df
       else:
          green_taska_anno_df[anno_name] = anno_df[anno_name]
-   green_taska_anno_df = green_taska_anno_df.drop('Time(sec)', axis=1)
+   #green_taska_anno_df = green_taska_anno_df.drop('Time(sec)', axis=1)
+   green_taska_anno_df = green_taska_anno_df.drop('Time_seconds', axis=1)
 
-   taskb_anno_path = os.path.join(green_data_root, 'TaskB', 'annotations_1hz')
+   taskb_anno_path = os.path.join(green_data_root, 'TaskB', 'annotations_1hz_shift_aligned')
    taskb_anno_files = glob.glob(os.path.join(taskb_anno_path, '*.csv'))
    green_taskb_anno_df = None
    for taskb_anno_file in taskb_anno_files:
@@ -85,22 +86,23 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
          green_taskb_anno_df = anno_df
       else:
          green_taskb_anno_df[anno_name] = anno_df[anno_name]
-   green_taskb_anno_df = green_taskb_anno_df.drop('Time(sec)', axis=1)
+   #green_taskb_anno_df = green_taskb_anno_df.drop('Time(sec)', axis=1)
+   green_taskb_anno_df = green_taskb_anno_df.drop('Time_seconds', axis=1)
 
    # Compute agreement
    for project_entry_name, combined_anno_df in [('Simulated Annotations', sim_anno_df),('Green Intensity Task A', green_taska_anno_df),('Green Intensity Task B', green_taskb_anno_df)]:
              
       fig_anno, axs_anno = plt.subplots(1,1, figsize=(11,9))
       fig_corr_box, axs_corr_box = plt.subplots(1,1, figsize=(11,9))
-      fig_corr, axs_corr = plt.subplots(4,5, figsize=(11,9))
       fig_agree, axs_agree = plt.subplots(1,1, figsize=(11,9), tight_layout=True)
-      fig_agg, axs_agg = plt.subplots(4,5, figsize=(11,9))
-      fig_spec, axs_spec= plt.subplots(4,5, figsize=(11,9))
+      fig_corr, axs_corr = plt.subplots(2,3, figsize=(11,9))
+      fig_agg, axs_agg = plt.subplots(2,3, figsize=(11,9))
+      fig_spec, axs_spec= plt.subplots(2,3, figsize=(11,9))
 
       for anno_col in combined_anno_df.columns:
          anno = combined_anno_df[anno_col].values
          axs_anno.plot(range(len(anno)), anno)
-         axs_anno.plot(range(len(anno)), len(anno)*[np.mean(anno)], linestyle='dashed')
+         #axs_anno.plot(range(len(anno)), len(anno)*[np.mean(anno)], linestyle='dashed')
 
       ### Value-based metrics ###
       # Pearson
@@ -218,9 +220,10 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       spearman_tri = GetUpperTri(spearman_corr_mat.values)
       kendall_tau_tri = GetUpperTri(kendall_corr_mat.values)
       ccc_tri = GetUpperTri(ccc_corr_mat.values)
-      mse_tri = GetUpperTri(mse_mat.values)
-      combined_tri = np.vstack((pearson_tri, spearman_tri, kendall_tau_tri, ccc_tri, mse_tri)).T
-      corr_tri_df = pd.DataFrame(data=combined_tri, columns=['Pearson', 'Spearman', 'Kendall\'s Tau', 'CCC', 'MSE'])
+      #mse_tri = GetUpperTri(mse_mat.values)
+      sda_tri = GetUpperTri(sda_mat.values)
+      combined_tri = np.vstack((pearson_tri, spearman_tri, kendall_tau_tri, ccc_tri, sda_tri)).T
+      corr_tri_df = pd.DataFrame(data=combined_tri, columns=['Pearson', 'Spearman', 'Kendall\'s Tau', 'CCC',  'SDA'])
 
       # Agglomerative clustering
       (agg_pearson_sim, pearson_cluster_order_idx, pearson_agg_link) = ClusterSimilarityMatrix(pearson_norm_corr_mat.values, method='centroid')
@@ -273,8 +276,8 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       sns.heatmap(pearson_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,0])
       sns.heatmap(spearman_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,1])
       sns.heatmap(kendall_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,2])
-      sns.heatmap(mse_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,3])
-      sns.heatmap(ccc_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,4])
+      sns.heatmap(mse_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[1,0])
+      sns.heatmap(ccc_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[1,1])
       #sns.heatmap(cohens_kappa_norm_diff_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[1,0])
       #sns.heatmap(cohens_kappa_abs_norm_diff_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[1,1])
       sns.heatmap(sda_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[1,2])
@@ -291,8 +294,8 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       sns.heatmap(agg_pearson_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[0,0])
       sns.heatmap(agg_spearman_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[0,1])
       sns.heatmap(agg_kendall_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[0,2])
-      sns.heatmap(agg_mse_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[0,3])
-      sns.heatmap(agg_ccc_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[0,4])
+      sns.heatmap(agg_mse_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[1,0])
+      sns.heatmap(agg_ccc_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[1,1])
       #sns.heatmap(agg_cohens_kappa_norm_diff_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[1,0])
       #sns.heatmap(agg_cohens_kappa_abs_norm_diff_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[1,1])
       sns.heatmap(agg_sda_sim, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_agg[1,2])
@@ -321,26 +324,29 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       sns.heatmap(pearson_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[0,0])
       sns.heatmap(spearman_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[0,1])
       sns.heatmap(kendall_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[0,2])
-      sns.heatmap(mse_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[0,3])
-      sns.heatmap(ccc_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[0,4])
+      sns.heatmap(mse_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[1,0])
+      sns.heatmap(ccc_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[1,1])
       #sns.heatmap(cohens_kappa_norm_diff_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidth=0.5, cbar_kws={"shrink" : 0.5}, ax=axs_spec[1,0])
       #sns.heatmap(cohens_kappa_abs_norm_diff_corr_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidth=0.5, cbar_kws={"shrink" : 0.5}, ax=axs_spec[1,1])
       sns.heatmap(sda_norm_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[1,2])
       #sns.heatmap(abs_norm_sum_delta_mat_spec, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_spec[1,3])
 
       # Box and whisker plots
-      sns.boxplot(data=corr_tri_df, ax=axs_corr_box)
+      if len(corr_tri_df) > 2:
+         sns.boxplot(data=corr_tri_df, ax=axs_corr_box)
+      else:
+         sns.barplot(data=corr_tri_df, ax=axs_corr_box)
       #sns.heatmap(pearson_norm_corr_mat, cmap=cmap, vmax=1.0, center=0, square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=axs_corr[0,0])
 
       axs_anno.title.set_text('Raw Annotations')
       axs_anno.legend(combined_anno_df.columns.values)
-      axs_agree.title.set_text('Global Agreement Metrics')
-      axs_corr_box.title.set_text(project_entry_name+' Correlation Box Plot')
+      axs_agree.title.set_text(project_entry_name+'Global Agreement Metrics')
+      axs_corr_box.title.set_text(project_entry_name+' Correlation')
       axs_corr[0,0].title.set_text('Pearson Corr')
       axs_corr[0,1].title.set_text('Spearman Corr')
       axs_corr[0,2].title.set_text('Kendall Tau')
-      axs_corr[0,3].title.set_text('MSE Corr')
-      axs_corr[0,4].title.set_text('CCC')
+      axs_corr[1,0].title.set_text('MSE Corr')
+      axs_corr[1,1].title.set_text('CCC')
       #axs_corr[1,0].title.set_text('Cohens Kappa Normed Diff')
       #axs_corr[1,1].title.set_text('Cohens Kappa Abs Normed Diff')
       axs_corr[1,2].title.set_text('SDA')
@@ -348,8 +354,8 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       axs_agg[0,0].title.set_text('Pearson Agg')
       axs_agg[0,1].title.set_text('Spearman Agg')
       axs_agg[0,2].title.set_text('Kendall Agg')
-      axs_agg[0,3].title.set_text('MSE Agg')
-      axs_agg[0,4].title.set_text('CCC Agg')
+      axs_agg[1,0].title.set_text('MSE Agg')
+      axs_agg[1,1].title.set_text('CCC Agg')
       #axs_agg[1,0].title.set_text('Cohens Kappa Normed Diff Agg')
       #axs_agg[1,1].title.set_text('Cohens Kappa Abs Normed Diff Agg')
       axs_agg[1,2].title.set_text('SDA Agg')
@@ -357,19 +363,18 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       axs_spec[0,0].title.set_text('Pearson Spec')
       axs_spec[0,1].title.set_text('Spearman Spec')
       axs_spec[0,2].title.set_text('Kendall Spec')
-      axs_spec[0,3].title.set_text('MSE Spec')
-      axs_spec[0,4].title.set_text('CCC Spec')
+      axs_spec[1,0].title.set_text('MSE Spec')
+      axs_spec[1,1].title.set_text('CCC Spec')
       #axs_spec[1,0].title.set_text('Cohens Kappa Normalized Diff Spec')
       #axs_spec[1,1].title.set_text('Cohens Kappa Abs Normalized Diff Spec')
       axs_spec[1,2].title.set_text('SDA Spec')
       #axs_spec[1,3].title.set_text('Abs Normed Sum Delta Spec')
       fig_anno.suptitle(project_entry_name+' Annotations')
-      fig_corr.suptitle(project_entry_name+' Agreement Measures')
       fig_agree.suptitle(project_entry_name+' Global Agreement Measures')
       fig_agg.suptitle(project_entry_name+' Agglomerative Clustering of Agreement')
       fig_spec.suptitle(project_entry_name+' Spectral Clustering of Agreement')
 
-      tikzplotlib.save(os.path.join(output_path, project_entry_name.lower().replace(' ','_')+'.tex'), figure=fig_anno, axis_width='\\figureWidth', textsize=12)
+      tikzplotlib.save(os.path.join(output_path, project_entry_name.lower().replace(' ','_')+'_boxplot.tex'), figure=fig_corr_box, axis_width='\\figureWidth', textsize=12)
 
       if show_plots:
          plt.show()

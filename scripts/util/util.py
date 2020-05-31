@@ -4,9 +4,13 @@ import pdb
 import glob
 import numpy as np
 import pandas as pd
+from datetime import datetime
+import pickle
+import pytz
+import agreement_metrics as agree
 
-# Find and load the data
-def LoadData(data_root_path, sample_rate):
+# Find and load the shades of green data
+def LoadGreenData(data_root_path, sample_rate):
    hz_suffix = str(sample_rate)+'hz'
    data_dict = {}
    task_dirs = glob.glob(os.path.join(data_root_path, '*'))
@@ -51,5 +55,36 @@ def LoadData(data_root_path, sample_rate):
             ot_clip_mask = np.logical_and(task_ot_df.iloc[:,0] >= min_anno_time, task_ot_df.iloc[:,0] <= max_anno_time)
             task_ot_df = task_ot_df.loc[ot_clip_mask,:]
             
+         task_anno_df = task_anno_df.iloc[:,1:] # Remove time column
          data_dict[task_name][anno_type_name] = {'annotations': task_anno_df, 'objective_truth': task_ot_df}
+   return data_dict
+
+def LoadRecolaData(data_root_path, cache_file=None):
+   data_dict = {}
+   if cache_file is not None and os.path.isfile(cache_file):
+      with open(cache_file, 'rb') as f:
+         data_dict = pickle.load(f)
+   else:
+      anno_files = glob.glob(os.path.join(data_root_path, '*.csv'))
+      for anno_file in anno_files:
+         anno_task = os.path.basename(anno_file).split('.')[0]
+         df = pd.read_csv(anno_file, sep=';')
+         df.index = [datetime.fromtimestamp(t, pytz.utc) for t in df.iloc[:,0]]
+         df = df.iloc[:,1:] # Remove the first time column
+         dtw_df = agree.DTWReference(df, df.iloc[:,0], max_warp_distance=75)
+         df = df.resample('1s').mean().interpolate()
+         dtw_df = dtw_df.resample('1s').mean().interpolate()
+         data_dict[anno_task] = {'raw': {}, 'dtw': {}}
+         data_dict[anno_task]['raw']['annotations'] = df
+         data_dict[anno_task]['raw']['objective_truth'] = None
+         data_dict[anno_task]['dtw']['annotations'] = dtw_df
+         data_dict[anno_task]['dtw']['objective_truth'] = None
+   if cache_file is not None and not os.path.isfile(cache_file):
+      with open(cache_file, 'wb') as f:
+         pickle.dump(data_dict, f, pickle.HIGHEST_PROTOCOL)
+   return data_dict
+
+def LoadDEAMData(data_root_path):
+   anno_df = data_dict['taska']['dtw']['annotations']
+   ot_df = data_dict['taska']['dtw']['objective_truth']
    return data_dict

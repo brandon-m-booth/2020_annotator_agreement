@@ -40,11 +40,24 @@ def PlotBackgroundBars(ax, x_vals, y_labels, y_lim=(-1000,1000), y_vals=None):
          ax.plot(x_vals[start_idx:clipped_last_idx], y_vals[start_idx:clipped_last_idx], c=line_color, marker='o', markersize=3, zorder=2)
    return
 
-def ComputeAnnotatorConsistency(data_root_path, output_path, show_plots=True, sample_rate=1):
+def ComputeAnnotatorConsistency(data_root_path, data_set_name, output_path, show_plots=True, sample_rate=1):
    if not os.path.isdir(output_path):
       os.makedirs(output_path)
 
-   data_dict = util.LoadData(data_root_path, sample_rate)
+   if data_set_name == 'green':
+      data_dict = util.LoadGreenData(data_root_path, sample_rate)
+   elif data_set_name == 'recola':
+      print("Not implemented")
+      return
+      data_dict = util.LoadRecolaData(data_root_path)
+   elif data_set_name == 'deam':
+      print("Not implemented")
+      return
+      data_dict = util.LoadDEAMData(data_root_path)
+   else:
+      print("Unknown data set name argument.  Please use one of: 'green', 'recola', 'deam'")
+      return
+
    for task in data_dict.keys():
       anno_types = data_dict[task].keys()
       print('Processing task: '+task)
@@ -205,6 +218,7 @@ def ComputeAnnotatorConsistency(data_root_path, output_path, show_plots=True, sa
 if __name__ == '__main__':
    parser = argparse.ArgumentParser()
    parser.add_argument('--data_root_path', required=True, help='Path to the parent folder of the green intensity data set')
+   parser.add_argument('--data_set_name', required=True, help='One of the following: "green", "recola", "deam"')
    parser.add_argument('--output_path', required=True, help='Output folder path')
    parser.add_argument('--show_plots', required=False, action='store_true')
    try:
@@ -212,4 +226,4 @@ if __name__ == '__main__':
    except:
       parser.print_help()
       sys.exit(0)
-   ComputeAnnotatorConsistency(args.data_root_path, args.output_path, args.show_plots)
+   ComputeAnnotatorConsistency(args.data_root_path, args.data_set_name, args.output_path, args.show_plots)

@@ -86,10 +86,24 @@ def SpearmanCorr(df):
 def KendallTauCorr(df):
    return df.corr(method='kendall')
 
+#def CronbachsAlphaCorr(df):
+   #cov = df.cov()
+   #n = df.shape[1]
+   #return k/(k-1.0)*(1 - cov.sum().sum()/np.trace(cov))
+
 def CronbachsAlphaCorr(df):
-   cov = df.cov()
-   k = df.shape[1]
-   return k/(k-1.0)*(1 - cov.sum().sum()/np.trace(cov))
+    # cols are items, rows are observations
+    itemscores = np.asarray(df)
+    itemvars = itemscores.var(axis=0, ddof=1)
+    tscores = itemscores.sum(axis=1)
+    nitems = itemscores.shape[1]
+
+    return (nitems / (nitems-1)) * (1 - (itemvars.sum() / tscores.var(ddof=1)))
+
+def SAGR(df, range_min, range_max):
+   mid_val = (range_min+range_max)/2.0
+   sagr = lambda x,y: np.sum(np.logical_or(np.logical_and(x>=mid_val, y>=mid_val), np.logical_and(x<mid_val,y<mid_val)))/float(len(x))
+   return df.corr(method=sagr)
 
 # Columns are individual signals and rows are frames
 def NormedDiff(df, tol=0.005):
@@ -170,11 +184,22 @@ def ICC(df):
    return icc_df
 
 def SDA(norm_diff_df):
-   norm_delta = lambda x,y: np.sum((x-y) == 0)/float(len(x))
+   norm_delta = lambda x,y: 2*np.sum((x-y) == 0)/float(len(x)) - 1.0
    return norm_diff_df.corr(method=norm_delta)
 
-# prob_value: The probability of getting any individual value in the df. Each observed value
-#             is assumed to be iid.
-def NormedSumDeltaCorrected(df, prob_value):
-   norm_delta_corrected = lambda x,y: (1.0 - prob_value**len(x))*np.sum((x-y) == 0)/float(len(x))
-   return df.corr(method=norm_delta_corrected)
+def SDACorrected(norm_diff_df):
+   norm_delta_kronecker = lambda x,y: np.sum((x-y) == 0)/float(len(x))
+   po = norm_diff_df.corr(method=norm_delta_kronecker)
+   chance_agree = lambda x,y: np.sum([np.sum(x==i)*np.sum(y==i) for i in [-1,0,1]])/float((len(x)-1)**2)
+   pe = norm_diff_df.corr(method=chance_agree)
+   return 1-(1.0-po)/(1.0-pe)
+
+def SDACorrected2(norm_diff_df):
+   sda_trend = lambda x,y: (np.sum(x+y == 2)+np.sum(x+y == -2))/float(np.sum(np.logical_or(x != 0, y != 0)))
+   po = norm_diff_df.corr(method=sda_trend)
+   trend_chance_agree = lambda x,y: np.sum([np.sum(x==i)*np.sum(y==i) for i in [-1,1]])/float((len(x)-1)**2)
+   pe = norm_diff_df.corr(method=trend_chance_agree)
+   return 1-(1.0-po)/(1.0-pe)
+
+def KSDA(norm_diff_df):
+   return CohensKappaCorr(norm_diff_df, labels=np.unique(norm_diff_df.values))
