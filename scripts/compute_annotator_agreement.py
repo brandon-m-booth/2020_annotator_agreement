@@ -161,8 +161,9 @@ def ComputeAnnotatorAgreement(data_root_path, data_set_name, output_path, show_p
 
          # ICC(2,1)
          icc_df = agree.ICC(combined_anno_df)
-         icc21_df = icc_df.loc[icc_df['type'] == 'ICC2',:]
-         icc21 = icc21_df['ICC'].iloc[0]
+         #icc21_df = icc_df.loc[icc_df['type'] == 'ICC2',:]
+         #icc21 = icc21_df['ICC'].iloc[0]
+         icc2 = icc_df.iloc[0,0]
 
          # SAGR (signed agreement)
          # BB - Doesn't make sense for scales where zero isn't the center
@@ -182,8 +183,8 @@ def ComputeAnnotatorAgreement(data_root_path, data_set_name, output_path, show_p
          ###############
 
          # Put global agreement measures into a dataframe
-         #global_agreement_df = pd.DataFrame(data=[[icc21, cronbachs_alpha, cronbachs_alpha_norm_diff, cronbachs_alpha_abs_norm_diff, cronbachs_alpha_accum_norm_diff, krippendorffs_alpha, krippendorffs_alpha_norm_diff, krippendorffs_alpha_abs_norm_diff, krippendorffs_alpha_accum_norm_diff]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Cronbach\'s Alpha Norm Diff', 'Cronbach\'s Alpha Abs Norm Diff', 'Cronbach\'s Alpha Accum Norm Diff', 'Krippendorff\'s Alpha', 'Krippendorff\'s Alpha Norm Diff', 'Krippendorff\'s Alpha Abs Norm Diff', 'Krippendorff\'s Alpha Accum Norm Diff'])
-         global_agreement_df = pd.DataFrame(data=[[icc21, cronbachs_alpha, krippendorffs_alpha]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Krippendorff\'s Alpha'])
+         #global_agreement_df = pd.DataFrame(data=[[icc2, cronbachs_alpha, cronbachs_alpha_norm_diff, cronbachs_alpha_abs_norm_diff, cronbachs_alpha_accum_norm_diff, krippendorffs_alpha, krippendorffs_alpha_norm_diff, krippendorffs_alpha_abs_norm_diff, krippendorffs_alpha_accum_norm_diff]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Cronbach\'s Alpha Norm Diff', 'Cronbach\'s Alpha Abs Norm Diff', 'Cronbach\'s Alpha Accum Norm Diff', 'Krippendorff\'s Alpha', 'Krippendorff\'s Alpha Norm Diff', 'Krippendorff\'s Alpha Abs Norm Diff', 'Krippendorff\'s Alpha Accum Norm Diff'])
+         global_agreement_df = pd.DataFrame(data=[[icc2, cronbachs_alpha, krippendorffs_alpha]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Krippendorff\'s Alpha'])
 
          # Max-normalize the MSE and convert to a correlation-like matrix
          mse_corr_mat = 1.0 - mse_mat/np.max(mse_mat.values)
@@ -218,9 +219,6 @@ def ComputeAnnotatorAgreement(data_root_path, data_set_name, output_path, show_p
          np.fill_diagonal(sagr_corr_mat.values, 1)
          sagr_corr_mat.clip(lower=-1.0, upper=1.0, inplace=True)
          sagr_norm_corr_mat = 0.5*sagr_corr_mat + 0.5
-
-         # HACK
-         ccc_norm_corr_mat = sagr_norm_corr_mat
 
          #cohens_kappa_norm_diff_corr_mat[pd.isna(cohens_kappa_norm_diff_corr_mat)] = 0
          #np.fill_diagonal(cohens_kappa_norm_diff_corr_mat.values, 1)

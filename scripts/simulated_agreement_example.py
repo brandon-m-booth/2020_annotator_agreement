@@ -152,10 +152,12 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       # Cronbach's alpha abs normed diff
       #cronbachs_alpha_accum_norm_diff = agree.CronbachsAlphaCorr(accum_norm_diff_df)
 
-      # ICC(2,1)
+      # ICC(2)
       icc_df = agree.ICC(combined_anno_df)
-      icc21_df = icc_df.loc[icc_df['type'] == 'ICC2',:]
-      icc21 = icc21_df['ICC'].iloc[0]
+      #icc21_df = icc_df.loc[icc_df['type'] == 'ICC2',:]
+      #icc21 = icc21_df['ICC'].iloc[0]
+      icc2 = icc_df.iloc[0,0]
+
 
       # SAGR (signed agreement)
       # BB - Doesn't make sense for scales where zero isn't the center
@@ -175,8 +177,8 @@ def RunSimulatedAgreementExample(green_data_root, output_path, show_plots):
       ###############
 
       # Put global agreement measures into a dataframe
-      #global_agreement_df = pd.DataFrame(data=[[icc21, cronbachs_alpha, cronbachs_alpha_norm_diff, cronbachs_alpha_abs_norm_diff, cronbachs_alpha_accum_norm_diff, krippendorffs_alpha, krippendorffs_alpha_norm_diff, krippendorffs_alpha_abs_norm_diff, krippendorffs_alpha_accum_norm_diff]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Cronbach\'s Alpha Norm Diff', 'Cronbach\'s Alpha Abs Norm Diff', 'Cronbach\'s Alpha Accum Norm Diff', 'Krippendorff\'s Alpha', 'Krippendorff\'s Alpha Norm Diff', 'Krippendorff\'s Alpha Abs Norm Diff', 'Krippendorff\'s Alpha Accum Norm Diff'])
-      global_agreement_df = pd.DataFrame(data=[[icc21, cronbachs_alpha, krippendorffs_alpha]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Krippendorff\'s Alpha'])
+      #global_agreement_df = pd.DataFrame(data=[[icc2, cronbachs_alpha, cronbachs_alpha_norm_diff, cronbachs_alpha_abs_norm_diff, cronbachs_alpha_accum_norm_diff, krippendorffs_alpha, krippendorffs_alpha_norm_diff, krippendorffs_alpha_abs_norm_diff, krippendorffs_alpha_accum_norm_diff]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Cronbach\'s Alpha Norm Diff', 'Cronbach\'s Alpha Abs Norm Diff', 'Cronbach\'s Alpha Accum Norm Diff', 'Krippendorff\'s Alpha', 'Krippendorff\'s Alpha Norm Diff', 'Krippendorff\'s Alpha Abs Norm Diff', 'Krippendorff\'s Alpha Accum Norm Diff'])
+      global_agreement_df = pd.DataFrame(data=[[icc2, cronbachs_alpha, krippendorffs_alpha]], columns=['ICC(2)', 'Cronbach\'s Alpha', 'Krippendorff\'s Alpha'])
 
       # Max-normalize the MSE and convert to a correlation-like matrix
       mse_corr_mat = 1.0 - mse_mat/np.max(mse_mat.values)
